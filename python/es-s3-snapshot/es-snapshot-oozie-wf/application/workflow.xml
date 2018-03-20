@@ -1,0 +1,56 @@
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="python-test-wf">
+    <start to="python-node"/>
+    <action name="python-node">
+        <shell xmlns="uri:oozie:shell-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <exec>es-s3-snapshot.py</exec>
+       		 <argument>-m</argument>
+                <argument>backup</argument>
+                <argument>-r</argument>
+                <argument>${es_snapshot_repository}</argument>
+                <argument>-ho</argument>
+                <argument>${es_cluster_seeds}</argument>
+                <argument>-i</argument>
+                <argument>${es_cluster_indices}</argument>
+                <argument>-s</argument>
+                <argument>${es_snapshot_name_prefix}</argument>
+		<file>es-s3-snapshot.py</file>
+	<capture-output/>
+        </shell>
+        <ok to="send_success"/>
+        <error to="send_error"/>
+    </action>
+
+    <action name="send_success" retry-max="3" retry-interval="1">
+        <email xmlns="uri:oozie:email-action:0.1">
+            <to>${success_emailid}</to>
+            <subject>Oozie Workflow ${wf:id()} Succeeded</subject>
+            <body>Oozie working completed successfully</body>
+        </email>
+        <ok to="end"/>
+        <error to="fail"/>
+   </action>
+
+   <action name="send_error" retry-max="3" retry-interval="1">
+        <email xmlns="uri:oozie:email-action:0.1">
+            <to>${error_emailid}</to>
+            <subject>Oozie Workflow ${wf:id()} failed</subject>
+            <body>error message[${wf:errorMessage(wf:lastErrorNode())}]</body>
+        </email>
+        <ok to="fail"/>
+        <error to="fail"/>
+   </action>
+
+
+    <kill name="fail">
+    <message>Python action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

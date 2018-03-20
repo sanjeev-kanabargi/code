@@ -1,0 +1,7 @@
+<coordinator-app name="es-snapshot-backup" frequency="${frequency}" start="${start_date}" end="${end_date}" timezone="UTC" xmlns="uri:oozie:coordinator:0.1">
+   <action>
+      <workflow>
+         <app-path>${application_path}/application</app-path>
+      </workflow>
+   </action>
+</coordinator-app>
